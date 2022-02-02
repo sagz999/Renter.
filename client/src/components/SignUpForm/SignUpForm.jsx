@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import GoogleButton from "react-google-button";
 import "./SignUpForm.css";
 import SignUpImage from "../../Images/SignUpImage.svg";
@@ -38,6 +38,8 @@ function Copyright(props) {
 const theme = createTheme();
 
 export default function SignInForm() {
+
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -72,14 +74,18 @@ export default function SignInForm() {
           "Content-type": "application/json",
         },
       };
-
+      setError(false);
       setLoading(true);
-      const { data } = await axios.post("/renter/user/signup", rest, config); 
-      console.log(data.message);
+      const { data } = await axios.post("/renter/user/signup", rest, config);
       setLoading(false);
+      // console.log(data);
+      // console.log("tryyyyyyyyy",data.message);
+      localStorage.setItem("userEmail", JSON.stringify(data.email));
+      navigate('/verifyAccount')
     } catch (error) {
       setLoading(false);
-      console.log(error.response.data.message);
+      // console.log('catchhhhhhh',error.response.data.message);
+      setError(error.response.data.message);
       
     }
   }; 
@@ -171,7 +177,7 @@ export default function SignInForm() {
                   </Grid>
                   <Grid item xs={6} sm={6}>
                     <TextField
-                      name="lastName"
+                      name="lastName" 
                       id="lastName"
                       label="Last name"
                       variant="outlined"
