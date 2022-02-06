@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link,useNavigate } from "react-router-dom";
-import GoogleButton from "react-google-button";
+// import GoogleButton from "react-google-button";
 import "./SignUpForm.css";
 import SignUpImage from "../../Images/SignUpImage.svg";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
@@ -16,6 +16,8 @@ import {
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import LoadingAnimation from "../LoadingAnimation/LoadingAnimation";
+import MuiAlert from "@mui/material/Alert";
+import { GoogleLogin } from "react-google-login";
 
 function Copyright(props) {
   return (
@@ -40,6 +42,41 @@ const theme = createTheme();
 export default function SignInForm() {
 
   const navigate = useNavigate();
+
+  const config = {
+    headers: {
+      "Content-type": "application/json",
+    }
+  };
+
+   const responseGoogle = async ({ profileObj }) => {
+
+     try {
+       setError(false);
+       setLoading(true);
+       const { data } = await axios.post(
+         "/renter/user/googleSignup",
+         profileObj,
+         config
+       );
+       localStorage.setItem("userData", JSON.stringify(data));
+       setLoading(false);
+       navigate("/userRentalInput");
+     } catch (error) {
+       setLoading(false);
+       setError(error.response.data.message);
+     }
+   };
+  
+  const errorGoogle = () => {
+    setError("Google server error try after sometime");
+  }
+
+  const Alert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={2} ref={ref} variant="filled" {...props} />;
+  });
+
+  
   const {
     register,
     handleSubmit,
@@ -69,22 +106,14 @@ export default function SignInForm() {
   const signUp = async (formData) => {
     const { rePassword, ...rest } = formData;
     try {
-      const config = {
-        headers: {
-          "Content-type": "application/json",
-        },
-      };
       setError(false);
       setLoading(true);
       const { data } = await axios.post("/renter/user/signup", rest, config);
       setLoading(false);
-      // console.log(data);
-      // console.log("tryyyyyyyyy",data.message);
       localStorage.setItem("userEmail", JSON.stringify(data.email));
       navigate('/verifyAccount')
     } catch (error) {
       setLoading(false);
-      // console.log('catchhhhhhh',error.response.data.message);
       setError(error.response.data.message);
       
     }
@@ -132,7 +161,9 @@ export default function SignInForm() {
               }}
             >
               <img className="signuplogo" src={SignUpImage} alt="signinImage" />
-              <Link to="/signin">Already have an account? Sign in</Link>
+              <p style={{ textAlign: "center" }}>
+                Already have an account?<Link to="/signin"> Sign in</Link>
+              </p>
             </Box>
           </Grid>
           <Grid item xs={12} sm={6} md={6}>
@@ -153,6 +184,21 @@ export default function SignInForm() {
                 noValidate
                 sx={{ mt: 3, paddingLeft: "60px", paddingRight: "60px" }}
               >
+                {error && (
+                  <Alert
+                    severity="error"
+                    style={{
+                      marginBottom: "12px",
+                      marginLeft: "20px",
+                      marginRight: "20px",
+                      textAlign: "center",
+                    }}
+                    className="alertMessage"
+                  >
+                    {error}
+                  </Alert>
+                )}
+
                 <Grid container spacing={2}>
                   <Grid item xs={6} sm={6}>
                     <TextField
@@ -177,7 +223,7 @@ export default function SignInForm() {
                   </Grid>
                   <Grid item xs={6} sm={6}>
                     <TextField
-                      name="lastName" 
+                      name="lastName"
                       id="lastName"
                       label="Last name"
                       variant="outlined"
@@ -295,7 +341,17 @@ export default function SignInForm() {
                   </Grid>
 
                   <div className="googlesignupbutton">
-                    <GoogleButton label="Sign up with google" />
+
+                    {/* <GoogleButton label="Sign up with google" /> */}
+
+                    <GoogleLogin
+                      clientId="731359664762-76o8flcot1chav3bnkmnk71ot35ogmdp.apps.googleusercontent.com"
+                      buttonText="Sign up with google"
+                      onSuccess={responseGoogle}
+                      onFailure={errorGoogle}
+                      cookiePolicy={"single_host_origin"}
+                    />
+
                   </div>
                 </Box>
               </Box>

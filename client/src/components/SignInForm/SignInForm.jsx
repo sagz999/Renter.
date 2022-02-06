@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 import {
   Button,
@@ -10,12 +10,14 @@ import {
   Typography,
   Container,
 } from "@mui/material";
-import GoogleButton from "react-google-button";
+// import GoogleButton from "react-google-button";
+import { GoogleLogin } from "react-google-login";
 import "./SignInForm.css";
 import SignInImage from "../../Images/SignInImage.svg";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import LoadingAnimation from "../LoadingAnimation/LoadingAnimation";
+import MuiAlert from "@mui/material/Alert";
 
 function Copyright(props) {
   return (
@@ -38,11 +40,48 @@ function Copyright(props) {
 const theme = createTheme();
 
 export default function SignInForm() {
+  const navigate = useNavigate();
+
+  const config = {
+    headers: {
+      "Content-type": "application/json",
+    },
+  };
+
+  const responseGoogle = async ({ profileObj }) => {
+
+   try {
+     setError(false);
+     setLoading(true);
+
+     const { data } = await axios.post("/renter/user/googleLogin", profileObj, config);
+
+     localStorage.setItem("userData", JSON.stringify(data));
+     setLoading(false);
+     navigate("/userRentalInput");
+   } catch (error) {
+     setLoading(false);
+     setError(error.response.data.message);
+   }
+    
+  };
+
+  const errorGoogle = () => {
+    setError("Google server error try after sometime");
+  };
+
+  const Alert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={2} ref={ref} variant="filled" {...props} />;
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
+
+  const [error, setError] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   const SigInButton = styled(Button)({
     color: "#ffc100",
@@ -56,6 +95,22 @@ export default function SignInForm() {
       backgroundColor: "black",
     },
   });
+
+  const signIn = async (formData) => {
+    try {
+      setError(false);
+      setLoading(true);
+
+      const { data } = await axios.post("/renter/user/login", formData, config);
+
+      localStorage.setItem("userData", JSON.stringify(data));
+      setLoading(false);
+      navigate("/userRentalInput");
+    } catch (error) {
+      setLoading(false);
+      setError(error.response.data.message);
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -84,7 +139,7 @@ export default function SignInForm() {
             marginTop: "12px",
           }}
         >
-          <LoadingAnimation />
+          {loading && <LoadingAnimation />}
         </div>
 
         <Grid container spacing={0}>
@@ -100,7 +155,10 @@ export default function SignInForm() {
               }}
             >
               <img className="signuplogo" src={SignInImage} alt="signupImage" />
-              <Link to="/signup">Don't have an account? Sign Up</Link>
+              <p style={{ textAlign: "center" }}>
+                Don't have an account?
+                <Link to="/signup">Sign Up</Link>
+              </p>
             </Box>
           </Grid>
           <Grid item xs={12} sm={6} md={6}>
@@ -116,11 +174,26 @@ export default function SignInForm() {
               <Box
                 component="form"
                 onSubmit={handleSubmit((e) => {
-                  console.log(e);
+                  signIn(e);
                 })}
                 noValidate
                 sx={{ mt: 3, paddingLeft: "60px", paddingRight: "60px" }}
               >
+                {error && (
+                  <Alert
+                    severity="error"
+                    style={{
+                      marginBottom: "8px",
+                      marginLeft: "20px",
+                      marginRight: "20px",
+                      textAlign: "center",
+                    }}
+                    className="alertMessage"
+                  >
+                    {error}
+                  </Alert>
+                )}
+
                 <TextField
                   name="email"
                   id="email"
@@ -190,7 +263,14 @@ export default function SignInForm() {
                   </Grid>
 
                   <div className="googlesigninbutton">
-                    <GoogleButton label="Sign in with google" />
+                    {/* <GoogleButton label="Sign in with google" /> */}
+                    <GoogleLogin
+                      clientId="731359664762-76o8flcot1chav3bnkmnk71ot35ogmdp.apps.googleusercontent.com"
+                      buttonText="Sign in with google"
+                      onSuccess={responseGoogle}
+                      onFailure={errorGoogle}
+                      cookiePolicy={"single_host_origin"}
+                    />
                   </div>
 
                   <Link to="/forgotPassword">Forgot password?</Link>

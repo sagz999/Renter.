@@ -41,11 +41,11 @@ const UserVendorHeader = () => {
 
   const HandleProfileMenu = (menuitem) => {
 
-    if (menuitem == 'Login') {
+    if (menuitem === 'Login') {
 
       navigate("/signin");
 
-    } else if (menuitem == 'Register') {
+    } else if (menuitem === 'Register') {
 
       navigate("/signup");
 

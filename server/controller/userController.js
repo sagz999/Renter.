@@ -5,7 +5,7 @@ const mailOTP = require("../utils/nodeMailer");
 
 module.exports = {
   registerUser: asyncHandler(async (req, res) => {
-    var userExist = await userHelper.duplicateUserCheck(req.body.email);
+    var userExist = await userHelper.UserExistCheck(req.body.email);
 
     if (userExist) {
       res.status(400);
@@ -26,12 +26,10 @@ module.exports = {
             userHelper
               .updateAuthUserData(checkAuthUser._id, otp, req.body)
               .then(() => {
-                res
-                  .status(200)
-                  .json({
-                    message: "OTP send to email",
-                    email: req.body.email,
-                  });
+                res.status(200).json({
+                  message: "OTP send to email",
+                  email: req.body.email,
+                });
               });
           } else {
             userHelper.storeAuthUserData(req.body, otp).then(() => {
@@ -45,4 +43,73 @@ module.exports = {
       });
     }
   }),
+
+  resendUserOtp: asyncHandler(async (req, res) => {
+    const { userEmail } = req.body;
+
+    let { option, otp, transporter } = await mailOTP(userEmail);
+
+    transporter.sendMail(option, async (error, info) => {
+      if (error) {
+        res.status(500).json({ message: "Unable to send OTP" });
+      } else {
+        userHelper.updateAuthUserOTP(userEmail, otp).then(() => {
+          res.status(200).json({
+            message: "OTP resend successfully",
+          });
+        });
+      }
+    });
+  }),
+
+  verifyUser: (req, res) => {
+    userHelper
+      .verifyUser(req.body)
+      .then((userData) => {
+        res.status(200).json(userData);
+      })
+      .catch(() => {
+        res.status(400).json({ message: "Invalid OTP" });
+      });
+  },
+
+  userLogin: (req, res) => {
+    userHelper.UserExistCheck(req.body.email).then((user) => {
+      if (user != null) {
+        userHelper
+          .userLoginCheck(req.body)
+          .then((userData) => {
+            if (userData == false) {
+              res.status(400).json({message:"Seems like you signed up with Google, Please sign in with Google to continue or click on forgot password to set a new password"})
+            } else {
+              res.status(200).json(userData);
+            }
+          })
+          .catch(() => {
+            res.status(400).json({ message: "Invalid Password" });
+          });
+      } else {
+        res.status(404).json({ message: "User does not exist" });
+      }
+    });
+  },
+
+  googleSignup: (req,res) => {
+    
+    userHelper.googleUserSignUp(req.body).then((user) => {
+      res.status(201).json(user);
+    }).catch(() => {
+      res.status(400).json({ message: "User Already exist" });
+    })
+
+  },
+
+  googleLogin: (req, res) => {
+    userHelper.googleUserLogin(req.body).then((user) => {
+      res.status(200).json(user);
+    }).catch(() => {
+      res.status(404).json({ message: "User not found" });
+    })
+  }
+
 };
