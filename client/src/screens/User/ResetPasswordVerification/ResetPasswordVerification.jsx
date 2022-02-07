@@ -1,17 +1,16 @@
 import React from "react";
-
+import ResetPasswordVerificationPage from "../../../components/ResetPasswordVerificationPage/ResetPasswordVerificationPage";
 import UserVendorFooter from "../../../components/UserVendorFooter/UserVendorFooter";
 import UserVendorHeader from "../../../components/UserVendorHeader/UserVendorHeader";
 
-const UserLandingPage = () => {
+const ResetPasswordVerification = () => {
   return (
     <div>
       <UserVendorHeader />
-      <div>User Landing Page</div>
+      <ResetPasswordVerificationPage />
       <UserVendorFooter />
     </div>
   );
 };
 
-export default UserLandingPage;
-
+export default ResetPasswordVerification;

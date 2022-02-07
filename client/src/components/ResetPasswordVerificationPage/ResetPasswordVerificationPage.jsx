@@ -9,7 +9,7 @@ import {
   Typography,
   Container,
 } from "@mui/material";
-import "./VerifyOtp.css";
+import "./ResetPasswordVerificationPage.css";
 import OtpVerificationImage from "../../Images/OtpVerificationImage.svg";
 import axios from "axios";
 import LoadingAnimation from "../LoadingAnimation/LoadingAnimation";
@@ -39,7 +39,7 @@ function Copyright(props) {
 
 const theme = createTheme();
 
-export default function VerifyOtp() {
+const ResetPasswordVerificationPage = () => {
   const navigate = useNavigate();
   const [OTP, setOTP] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -127,14 +127,12 @@ export default function VerifyOtp() {
 
       try {
         const { data } = await axios.post(
-          "/renter/user/verifyUser",
+          "/renter/user/resetPasswordAuth",
           { userEmail, OTP },
           config
         );
-        localStorage.removeItem("userEmail");
-        localStorage.setItem("userData", JSON.stringify(data));
         setLoading(false);
-        navigate("/userRentalInput");
+        navigate("/changePassword");
       } catch (error) {
         setLoading(false);
         setError(error.response.data.message);
@@ -257,4 +255,6 @@ export default function VerifyOtp() {
       </Container>
     </ThemeProvider>
   );
-}
+};
+
+export default ResetPasswordVerificationPage;

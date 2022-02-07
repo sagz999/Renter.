@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
 // import GoogleButton from "react-google-button";
-import "./SignUpForm.css";
-import SignUpImage from "../../Images/SignUpImage.svg";
+import "./ChangePasswordPage.css";
+import ResetPasswordImage from "../../Images/ResetPasswordImage.svg";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 import {
   Button,
@@ -39,35 +39,13 @@ function Copyright(props) {
 
 const theme = createTheme();
 
-export default function SignInForm() {
+export default function ChangePasswordPage() {
   const navigate = useNavigate();
 
   const config = {
     headers: {
       "Content-type": "application/json",
     },
-  };
-
-  const responseGoogle = async ({ profileObj }) => {
-    try {
-      setError(false);
-      setLoading(true);
-      const { data } = await axios.post(
-        "/renter/user/googleSignup",
-        profileObj,
-        config
-      );
-      localStorage.setItem("userData", JSON.stringify(data));
-      setLoading(false);
-      navigate("/userRentalInput");
-    } catch (error) {
-      setLoading(false);
-      setError(error.response.data.message);
-    }
-  };
-
-  const errorGoogle = () => {
-    setError("Google server error try after sometime");
   };
 
   const Alert = React.forwardRef(function Alert(props, ref) {
@@ -100,16 +78,21 @@ export default function SignInForm() {
   const [error, setError] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
-  const signUp = async (formData) => {
-    const { rePassword, ...rest } = formData;
+  const changePass = async (formData) => {
+    
     try {
       setError(false);
       setLoading(true);
-      const { data } = await axios.post("/renter/user/signup", rest, config);
+      let userEmail = await JSON.parse(localStorage.getItem("userEmail"));
+      let password = formData.password;
+      const { data } = await axios.post(
+        "/renter/user/changePassword",
+        { password, userEmail },
+        config
+      );
       setLoading(false);
-      localStorage.setItem("userEmail", JSON.stringify(data.email));
-   
-      navigate("/verifyAccount");
+      
+      navigate("/signin");
     } catch (error) {
       setLoading(false);
       setError(error.response.data.message);
@@ -128,12 +111,12 @@ export default function SignInForm() {
               textAlign: "center",
               marginTop: 5,
               backgroundColor: "#ffc100",
-              width: "110px",
+              width: "210px",
               fontWeight: "Bold",
               borderRadius: "30px",
             }}
           >
-            SIGN-UP
+            RESET-PASSWORD
           </Typography>
         </div>
         <div
@@ -157,13 +140,14 @@ export default function SignInForm() {
                 paddingRight: "90px",
               }}
             >
-              <img className="signuplogo" src={SignUpImage} alt="signinImage" />
-              <p style={{ textAlign: "center" }}>
-                Already have an account?<Link to="/signin"> Sign in</Link>
-              </p>
+              <img
+                className="signuplogo"
+                src={ResetPasswordImage}
+                alt="signinImage"
+              />
             </Box>
           </Grid>
-          <Grid item xs={12} sm={6} md={6}>
+          <Grid item xs={12} sm={6} md={6} className="inputBox">
             <Box
               sx={{
                 marginTop: 2,
@@ -176,7 +160,7 @@ export default function SignInForm() {
               <Box
                 component="form"
                 onSubmit={handleSubmit((e) => {
-                  signUp(e);
+                  changePass(e);
                 })}
                 noValidate
                 sx={{ mt: 3, paddingLeft: "60px", paddingRight: "60px" }}
@@ -197,70 +181,11 @@ export default function SignInForm() {
                 )}
 
                 <Grid container spacing={2}>
-                  <Grid item xs={6} sm={6}>
-                    <TextField
-                      name="firstName"
-                      id="firstName"
-                      label="First name"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      {...register("firstName", {
-                        required: "This field can't be empty",
-                        minLength: {
-                          value: 3,
-                          message: "Minimun 3 charecters",
-                        },
-                      })}
-                      error={errors.firstName}
-                      helperText={
-                        errors.firstName ? errors.firstName.message : ""
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={6} sm={6}>
-                    <TextField
-                      name="lastName"
-                      id="lastName"
-                      label="Last name"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      {...register("lastName", {
-                        required: "This field can't be empty",
-                      })}
-                      error={errors.lastName}
-                      helperText={
-                        errors.lastName ? errors.lastName.message : ""
-                      }
-                    />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <TextField
-                      name="email"
-                      id="email"
-                      label="Email Id"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      {...register("email", {
-                        required: "This field can't be empty",
-                        pattern: {
-                          value:
-                            /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-                          message: "Enter a valid email",
-                        },
-                      })}
-                      error={errors.email}
-                      helperText={errors.email ? errors.email.message : ""}
-                    />
-                  </Grid>
                   <Grid item xs={12}>
                     <TextField
                       name="password"
                       id="password"
-                      label="Password"
+                      label="New Password"
                       type="password"
                       variant="outlined"
                       fullWidth
@@ -299,14 +224,6 @@ export default function SignInForm() {
                       }
                     />
                   </Grid>
-                  {/* <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox value="allowExtraEmails" color="primary" />
-                      }
-                      label="I want to receive inspiration, marketing promotions and updates via email."
-                    />
-                  </Grid> */}
                 </Grid>
 
                 <Box
@@ -315,39 +232,8 @@ export default function SignInForm() {
                   }}
                 >
                   <SigUnUpButton type="submit" variant="contained">
-                    Sign up
+                    Submit
                   </SigUnUpButton>
-                  <Grid container spacing={0} sx={{ mt: 2, mb: 2 }}>
-                    <Grid item xs={5} sm={5} md={5}>
-                      <hr />
-                    </Grid>
-                    <Grid item xs={2} sm={2} md={2}>
-                      <Typography
-                        component="h3"
-                        variant="h6"
-                        sx={{
-                          margin: "0",
-                        }}
-                      >
-                        OR
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={5} sm={5} md={5}>
-                      <hr />
-                    </Grid>
-                  </Grid>
-
-                  <div className="googlesignupbutton">
-                    {/* <GoogleButton label="Sign up with google" /> */}
-
-                    <GoogleLogin
-                      clientId="731359664762-76o8flcot1chav3bnkmnk71ot35ogmdp.apps.googleusercontent.com"
-                      buttonText="Sign up with google"
-                      onSuccess={responseGoogle}
-                      onFailure={errorGoogle}
-                      cookiePolicy={"single_host_origin"}
-                    />
-                  </div>
                 </Box>
               </Box>
             </Box>

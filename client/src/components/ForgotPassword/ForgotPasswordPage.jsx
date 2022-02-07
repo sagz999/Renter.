@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 import {
@@ -10,9 +10,8 @@ import {
   Typography,
   Container,
 } from "@mui/material";
-import { GoogleLogin } from "react-google-login";
-import "./SignInForm.css";
-import SignInImage from "../../Images/SignInImage.svg";
+import "./ForgotPasswordPage.css";
+import ForgotPasswordImage from "../../Images/ForgotPasswordImage.svg";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import LoadingAnimation from "../LoadingAnimation/LoadingAnimation";
@@ -36,42 +35,32 @@ function Copyright(props) {
   );
 }
 
-const theme = createTheme();
+const config = {
+  headers: {
+    "Content-type": "application/json",
+  },
+};
 
-export default function SignInForm() {
+const SubmitButton = styled(Button)({
+  color: "#ffc100",
+  backgroundColor: "black",
+  borderRadius: "30px",
+  fontWeight: "900",
+  marginTop: 30,
+  marginBottom: 2,
+  textTransform: "none",
+  "&:hover": {
+    backgroundColor: "black",
+  },
+});
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={2} ref={ref} variant="filled" {...props} />;
+});
+
+const ForgotPasswordPage = () => {
+  const theme = createTheme();
   const navigate = useNavigate();
-
-  const config = {
-    headers: {
-      "Content-type": "application/json",
-    },
-  };
-
-  const responseGoogle = async ({ profileObj }) => {
-
-   try {
-     setError(false);
-     setLoading(true);
-
-     const { data } = await axios.post("/renter/user/googleLogin", profileObj, config);
-
-     localStorage.setItem("userData", JSON.stringify(data));
-     setLoading(false);
-     navigate("/userRentalInput");
-   } catch (error) {
-     setLoading(false);
-     setError(error.response.data.message);
-   }
-    
-  };
-
-  const errorGoogle = () => {
-    setError("Google server error try after sometime");
-  };
-
-  const Alert = React.forwardRef(function Alert(props, ref) {
-    return <MuiAlert elevation={2} ref={ref} variant="filled" {...props} />;
-  });
 
   const {
     register,
@@ -79,32 +68,21 @@ export default function SignInForm() {
     formState: { errors },
   } = useForm();
 
-  const [error, setError] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const SigInButton = styled(Button)({
-    color: "#ffc100",
-    backgroundColor: "black",
-    borderRadius: "30px",
-    fontWeight: "900",
-    marginTop: 30,
-    marginBottom: 2,
-    textTransform: "none",
-    "&:hover": {
-      backgroundColor: "black",
-    },
-  });
-
-  const signIn = async (formData) => {
+  const forgotPass = async (email) => {
     try {
-      setError(false);
       setLoading(true);
-
-      const { data } = await axios.post("/renter/user/login", formData, config);
-
-      localStorage.setItem("userData", JSON.stringify(data));
+      setError(false);
+      const { data } = await axios.post(
+        "/renter/user/resetPassword",
+        email,
+        config
+      );
+      localStorage.setItem("userEmail", JSON.stringify(data));
       setLoading(false);
-      navigate("/userRentalInput");
+      navigate("/resetPasswordVerification");
     } catch (error) {
       setLoading(false);
       setError(error.response.data.message);
@@ -123,12 +101,12 @@ export default function SignInForm() {
               textAlign: "center",
               marginTop: 5,
               backgroundColor: "#ffc100",
-              width: "100px",
+              width: "240px",
               fontWeight: "Bold",
               borderRadius: "30px",
             }}
           >
-            SIGN-IN
+            FORGOT PASSWORD
           </Typography>
         </div>
         <div
@@ -153,14 +131,14 @@ export default function SignInForm() {
                 paddingRight: "90px",
               }}
             >
-              <img className="signuplogo" src={SignInImage} alt="signupImage" />
-              <p style={{ textAlign: "center" }}>
-                Don't have an account?
-                <Link to="/signup">Sign Up</Link>
-              </p>
+              <img
+                className="signuplogo"
+                src={ForgotPasswordImage}
+                alt="ForgotPasswordImage"
+              />
             </Box>
           </Grid>
-          <Grid item xs={12} sm={6} md={6}>
+          <Grid item xs={12} sm={6} md={6} className="inputBox">
             <Box
               sx={{
                 marginTop: 2,
@@ -173,7 +151,7 @@ export default function SignInForm() {
               <Box
                 component="form"
                 onSubmit={handleSubmit((e) => {
-                  signIn(e);
+                  forgotPass(e);
                 })}
                 noValidate
                 sx={{ mt: 3, paddingLeft: "60px", paddingRight: "60px" }}
@@ -213,66 +191,14 @@ export default function SignInForm() {
                   helperText={errors.email ? errors.email.message : ""}
                 />
 
-                <TextField
-                  name="password"
-                  id="password"
-                  label="Password"
-                  type="password"
-                  variant="outlined"
-                  margin="normal"
-                  fullWidth
-                  required
-                  {...register("password", {
-                    required: "This field can't be empty",
-                    minLength: {
-                      value: 6,
-                      message: "Minimun 6 charecters",
-                    },
-                  })}
-                  error={errors.password}
-                  helperText={errors.password ? errors.password.message : ""}
-                />
-
                 <Box
                   sx={{
                     textAlign: "center",
                   }}
                 >
-                  <SigInButton type="submit" variant="contained">
-                    Sign in
-                  </SigInButton>
-                  <Grid container spacing={0} sx={{ mt: 2, mb: 2 }}>
-                    <Grid item xs={5} sm={5} md={5}>
-                      <hr />
-                    </Grid>
-                    <Grid item xs={2} sm={2} md={2}>
-                      <Typography
-                        component="h3"
-                        variant="h6"
-                        sx={{
-                          margin: "0",
-                        }}
-                      >
-                        OR
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={5} sm={5} md={5}>
-                      <hr />
-                    </Grid>
-                  </Grid>
-
-                  <div className="googlesigninbutton">
-                    {/* <GoogleButton label="Sign in with google" /> */}
-                    <GoogleLogin
-                      clientId="731359664762-76o8flcot1chav3bnkmnk71ot35ogmdp.apps.googleusercontent.com"
-                      buttonText="Sign in with google"
-                      onSuccess={responseGoogle}
-                      onFailure={errorGoogle}
-                      cookiePolicy={"single_host_origin"}
-                    />
-                  </div>
-
-                  <Link to="/forgotPassword">Forgot password?</Link>
+                  <SubmitButton type="submit" variant="contained">
+                    Submit
+                  </SubmitButton>
                 </Box>
               </Box>
             </Box>
@@ -282,4 +208,6 @@ export default function SignInForm() {
       </Container>
     </ThemeProvider>
   );
-}
+};
+
+export default ForgotPasswordPage;

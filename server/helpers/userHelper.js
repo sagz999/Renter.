@@ -15,17 +15,6 @@ module.exports = {
     });
   },
 
-  // registerUser: (userData) => {
-  //   return new Promise((resolve, reject) => {
-  //     db.get()
-  //       .collection(collection.USER_COLLECTION)
-  //       .insertOne(userData)
-  //       .then(() => {
-  //         resolve();
-  //       });
-  //   });
-  // },
-
   storeAuthUserData: (userData, OTP) => {
     return new Promise((resolve, reject) => {
       db.get()
@@ -121,9 +110,8 @@ module.exports = {
         .findOne({ email: email })
         .then(async (userData) => {
           if (userData.password == null) {
-            resolve(false)
+            resolve(false);
           } else {
-
             let status = await bcrypt.compare(password, userData.password);
             if (status) {
               let { password, ...rest } = userData;
@@ -132,7 +120,6 @@ module.exports = {
               reject();
             }
           }
-          
         });
     });
   },
@@ -163,7 +150,7 @@ module.exports = {
               .collection(collection.USER_COLLECTION)
               .findOne({ _id: ObjectId(insertedId) })
               .then((user) => {
-                 const { password, ...rest } = user;
+                const { password, ...rest } = user;
                 resolve(rest);
               });
           });
@@ -203,4 +190,41 @@ module.exports = {
       }
     });
   },
+
+  setOtpToResetPass: (otp, userId) => {
+    return new Promise((resolve, reject) => {
+      db.get()
+        .collection(collection.USER_COLLECTION)
+        .updateOne(
+          { _id: ObjectId(userId) },
+          { $set: { resetPassOTP: otp } },
+          { upsert: true }
+        )
+        .then(() => {
+          resolve();
+        });
+    });
+  },
+
+  resetPasswordAuthenticate: (authData) => {
+    return new Promise((resolve, reject) => {
+      db.get()
+        .collection(collection.USER_COLLECTION)
+        .findOne({ email: authData.userEmail, resetPassOTP: authData.OTP })
+        .then((user) => {
+          if (user) {
+            resolve();
+          } else {
+            reject();
+          }
+        });
+    });
+  },
+
+  changePassword: (passData) => {
+    return new Promise((resolve, reject) => {
+      console.log(passData)
+      db.get().collection(collection.USER_COLLECTION).updateOne({email:passData.email})
+    })
+  }
 };
